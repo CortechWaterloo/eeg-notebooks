@@ -12,8 +12,9 @@ import numpy as np
 import seaborn as sns
 from matplotlib import pyplot as plt
 
-from eegnb import DATA_DIR
+from eegnb import DATA_DIR, generate_save_path, generate_save_fn
 from eegnb.devices.utils import EEG_INDICES, SAMPLE_FREQS
+from eegnb.devices.eeg import EEG
 
 
 sns.set_context("talk")
@@ -317,3 +318,53 @@ def plot_highlight_regions(
     sns.despine()
 
     return fig, axes
+
+def replaceMarkers(events, newMarkers):
+
+    newEvents = events
+    j = 0
+    for i in range(len(events)):
+        if events[i][2] != 99:
+            newEvents[i][2] = newMarkers[j]
+            j = j + 1
+        elif events[i][2] == 99:
+            j = 0
+            
+    return newEvents
+
+def replaceMarkersAndSave(board_name, experiment, subject, session_nb, newMarkers, filename):
+    raw = load_data(subject, session_nb, board_name, experiment, replace_ch_names=None, verbose=1, site='all', data_dir=None)
+    eegnb_data_path = generate_save_path(board_name, experiment, subject, session_nb)
+    tempEvents = find_events(raw)
+    newEvents = replaceMarkers(tempEvents, newMarkers)
+    raw.add_events(events = newEvents, stim_channel = "stim", replace = True)
+    rawDF = raw.to_data_frame(picks = "all", copy = True)
+    rawDF.to_csv(eegnb_data_path + "/" + filename, index = False)
+    
+def makeoddball(inputs, rep):
+    #based on inputs, creating oddball paradigms markers depending on "switch"
+    value = inputs[0]
+    count = 0
+    markerArray = []
+    for i in range(len(inputs)):
+        if inputs[i] == value:
+            count += 1
+            if count == rep:
+                markerArray.append(1) #represents standard that is on rep
+            else:
+                markerArray.append(3) #represents a repeated tone that isn't being classified as a standard (!= rep) ex. if rep = 3, the 2nd, 4th, 5th, etc tones in repetition would be represented by a 3
+        else:
+            if count >= rep + 1:
+                markerArray.append(2) #represents deviant following a standard and some number of repeated tones ex. if rep = 3, a deviant after the 3rd, 4th, 5th etc tone in repetition would be represented by a 2 
+            
+            else:
+                markerArray.append(4) #represents an "early deviant" ex. if rep = 3, a deviant after the 2nd 
+            value = inputs[i]
+            count = 1
+    return markerArray
+
+def maketonesnums(num):
+    newArray = []
+    for i in range(num):
+        newArray.append(90000+i)
+    return newArray   
