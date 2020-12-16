@@ -91,12 +91,7 @@ def run_experiment(experiment, record_duration, eeg_device, save_fn):
 
         for i in range(0, len(highPE)):
             newAdditionalMarker = (
-                str(oddball3[i])
-                + str(oddball4[i])
-                + str(oddball5[i])
-                + str(oddball6[i])
-                + str(highPE[i])
-                + str(lowPE[i])
+                str(tonenums[i])
             )
             newAdditionalMarkers.append(newAdditionalMarker)
 
