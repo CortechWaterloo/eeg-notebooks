@@ -4,7 +4,7 @@ import copy
 import math
 from collections import OrderedDict
 
-from mne import create_info, concatenate_raws
+from mne import create_info, concatenate_raws, find_events
 from mne.io import RawArray
 from mne.channels import make_standard_montage
 import pandas as pd
